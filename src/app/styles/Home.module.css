@@ -1,0 +1,59 @@
+.post {
+  background-color: #ffffff;
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+  margin-top: 0;
+}
+
+.postInfo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.postDate {
+  color: #888888;
+  font-size: 0.9em;
+  margin-right: 5px;
+}
+
+.postCategories {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 10px 0;
+  display: flex;
+  gap: 10px;
+}
+
+li {
+  padding: 5px 10px;
+  border-radius: 5px;
+  border: solid;
+  border-color: #4e7dff;
+  font-size: 0.9em;
+  color: rgb(9, 102, 252);
+}
+
+.postContent {
+  line-height: 1.6;
+}
+
+/*ブラウザ標準のCSSが当たっているため、
+特に指定しない場合、ブラウザの使用で、aタグにはunderlineや青文字が適用されてしまう形だったため、以下を追記。*/
+.postLink {
+  text-decoration: none;
+  color: #333;
+}
+
+.postLoading {
+  margin: 20px auto;
+  text-align: center;
+  font-size: 15px;
+  font-weight: bold;
+}

@@ -1,95 +1,72 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+"use client";
+import { useState, useEffect } from "react";
+import type { Post } from "@/app/_types/Post";
+import { PostSummary } from "./_components/PostSummary";
 
-export default function Home() {
-  return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>src/app/page.tsx</code>.
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+import Link from "next/link";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { MicroCmsPost } from "./_types/MicroCmsPost";
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
+const Page: React.FC = () => {
+  // 投稿データを「状態」として管理 (初期値はnull)
+  const [posts, setPosts] = useState<MicroCmsPost[] | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetcher = async () => {
+      const res = await fetch("https://2s94i47buf.microcms.io/api/v1/posts", {
+        headers: {
+          "X-MICROCMS-API-KEY": process.env
+            .NEXT_PUBLIC_MICROCMS_API_KEY as string,
+        },
+      });
+
+      //分割代入でconst {posts}=...は書かれている。 { posts: Post[] } は { posts　}の型指定。
+      //複数の投稿を扱うため、レスポンスが`{ posts: [...] }`という形式。だから、以下のようにかける。
+      const { contents }: { contents: MicroCmsPost[] } = await res.json();
+      setPosts(contents);
+      setLoading(false);
+    };
+
+    fetcher();
+  }, []);
+
+  //loadingがtrueだったら,28行目が処理される。
+  if (loading) return <div className="text-gray-500">読み込み中…</div>;
+
+  //loadingがfalseかつpostsが空なら,31行目が処理される。
+  if (!posts) return <div className="text-gray-500">投稿がありません、、</div>;
+
+  //loadingがfalseかつpostsがあるなら, 34行目が処理される。
+  return posts.map((post) => (
+    <div key={post.id} className="mb-5 rounded-lg bg-white p-5 shadow-md">
+      <Link href={`/posts/${post.id}`} className="text-black no-underline">
+        {/* `/posts/${post.id}`の``は、JSの書き方。`post.id`の値が`/posts/の後に続くURLを動的に作成しています。例えば、post.id`が`123`なら、リンク先は`/posts/123`になる*/}
+
+        <div className="mb-[10px] flex items-center justify-between">
+          <p className="mr-1 text-sm text-[#888888]">
+            {new Date(post.createdAt).toLocaleDateString()}
+          </p>
+          <ul className="m-0 mb-2.5 flex list-none gap-2.5 p-0">
+            {post.categories.map((category, index) => (
+              <li
+                className="rounded border border-blue-500 px-2.5 py-[1.25] text-sm text-blue-600"
+                key={index}
+              >
+                {category.name}
+              </li>
+            ))}
+          </ul>
         </div>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        <h2 className="mb-10 text-xl font-bold leading-7">{post.title}</h2>
+        <p
+          className="line-clamp-3 leading-[1.6]"
+          dangerouslySetInnerHTML={{ __html: post.content }}
+        />
+      </Link>
     </div>
-  );
-}
+  ));
+};
+
+export default Page;
