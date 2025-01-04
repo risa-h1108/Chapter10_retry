@@ -5,20 +5,24 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { CategoryForm } from "@/app/admin/categories/_components/CategoryForm";
+import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 
 export default function Page() {
   const [name, setName] = useState("");
   const { id } = useParams();
   const router = useRouter();
+  const { token } = useSupabaseSession();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!token) return;
 
     try {
       const res = await fetch(`/api/admin/categories/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
+          Authorization: token,
         },
         body: JSON.stringify({ name }),
       });
@@ -55,15 +59,21 @@ export default function Page() {
 
   //`id`が変わるたびにデータを取得するように設定
   useEffect(() => {
+    if (!token) return;
     const fetcher = async () => {
-      const res = await fetch(`/api/admin/categories/${id}`);
+      const res = await fetch(`/api/admin/categories/${id}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token, // 👈 Header に token を付与
+        },
+      });
       const { category } = await res.json();
       // 取得したカテゴリーの名前(category.name)を`setName`関数で状態に保存
       setName(category.name);
     };
 
     fetcher();
-  }, [id]);
+  }, [id, token]);
 
   return (
     <div className="container mx-auto px-4">

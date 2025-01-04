@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { PostForm } from "@/app/admin/_components/PostForm";
 import { Category } from "@/app/_types/Category";
 import { Post } from "@/app/_types/Post";
+import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 
 export default function Page() {
   const [title, setTitle] = useState("");
@@ -13,10 +14,12 @@ export default function Page() {
   const [categories, setCategories] = useState<Category[]>([]);
   const { id } = useParams();
   const router = useRouter();
+  const { token } = useSupabaseSession();
 
   const handleSubmit = async (e: React.FormEvent) => {
     // フォームのデフォルトの動作をキャンセルします。
     e.preventDefault();
+    if (!token) return;
 
     try {
       //記事を作成
@@ -24,6 +27,7 @@ export default function Page() {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
+          Authorization: token, // 👈 Header に token を付与
         },
         body: JSON.stringify({ title, content, thumbnailUrl, categories }),
       });
@@ -50,9 +54,16 @@ export default function Page() {
   };
 
   useEffect(() => {
+    if (!token) return;
     const fetcher = async () => {
       try {
-        const res = await fetch(`/api/admin/posts/${id}`);
+        const res = await fetch(`/api/admin/posts/${id}`, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token, // 👈 Header に token を付与
+          },
+        });
+
         if (!res.ok) {
           throw new Error("Failed to fetch data");
         }
@@ -80,7 +91,7 @@ export default function Page() {
     };
 
     fetcher();
-  }, [id]);
+  }, [id, token]);
 
   return (
     <div className="container mx-auto px-4">

@@ -5,18 +5,24 @@
 import { useState } from "react";
 import { CategoryForm } from "@/app/admin/categories/_components/CategoryForm";
 import { useRouter } from "next/navigation";
+import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 
 export default function Page() {
   const [name, setName] = useState("");
   const router = useRouter();
+  const { token } = useSupabaseSession();
 
   const handleSubmit = async (e: React.FormEvent) => {
+    if (!token) return;
     e.preventDefault();
 
     try {
       const res = await fetch("/api/admin/categories", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token, // 👈 Header に token を付与
+        },
         //`name`という変数をJSON形式の文字列に変換
         body: JSON.stringify({ name }),
       });

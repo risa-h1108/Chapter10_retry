@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Category, PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
+import { supabase } from "@/app/untils/supabase";
 
 const prisma = new PrismaClient();
 
@@ -7,8 +8,17 @@ export const GET = async (
   request: NextRequest,
   { params }: { params: { id: string } }
 ) => {
+  const token = request.headers.get("Authorization") ?? "";
   const { id } = params;
 
+  // supabaseに対してtokenを送る
+  const { error } = await supabase.auth.getUser(token);
+
+  // 送ったtokenが正しくない場合、errorが返却されるので、クライアントにもエラーを返す
+  if (error)
+    return NextResponse.json({ status: error.message }, { status: 400 });
+
+  // tokenが正しい場合、以降が実行される
   try {
     const post = await prisma.post.findUnique({
       where: {

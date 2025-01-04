@@ -7,6 +7,7 @@ import Select from "@mui/material/Select";
 import Chip from "@mui/material/Chip";
 import { Category } from "@/app/_types/Category";
 import { useEffect } from "react";
+import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 
 interface Props {
   selectedCategories: Category[];
@@ -18,6 +19,7 @@ export const CategoriesSelect: React.FC<Props> = ({
   setSelectedCategories,
 }) => {
   const [categories, setCategories] = React.useState<Category[]>([]);
+  const { token } = useSupabaseSession();
 
   //handleChange:カテゴリーの選択が変更されたときに呼び出される関数
   const handleChange = (value: number[]) => {
@@ -38,8 +40,14 @@ export const CategoriesSelect: React.FC<Props> = ({
   };
 
   useEffect(() => {
+    if (!token) return;
     const fetcher = async () => {
-      const res = await fetch("/api/admin/categories");
+      const res = await fetch("/api/admin/categories", {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token, // 👈 Header に token を付与
+        },
+      });
       const { categories } = await res.json();
       setCategories(categories);
     };

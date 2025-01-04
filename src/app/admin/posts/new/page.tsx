@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { PostForm } from "@/app/admin/_components/PostForm";
 import { Category } from "@/app/_types/Category";
+import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 
 export default function Page() {
   const [title, setTitle] = useState("");
@@ -13,8 +14,10 @@ export default function Page() {
   );
   const [categories, setCategories] = useState<Category[]>([]);
   const router = useRouter();
+  const { token } = useSupabaseSession();
 
   const handleSubmit = async (e: React.FormEvent) => {
+    if (!token) return;
     // フォームのデフォルトの動作をキャンセルします。
     e.preventDefault();
 
@@ -22,7 +25,10 @@ export default function Page() {
       // 記事作成(記事登録)
       const res = await fetch("/api/admin/posts", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token, // 👈 Header に token を付与},
+        },
         body: JSON.stringify({ title, content, thumbnailUrl, categories }),
       });
 

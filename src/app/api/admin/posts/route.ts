@@ -1,9 +1,21 @@
+import { supabase } from "@/app/untils/supabase";
 import { PrismaClient } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
 const prisma = new PrismaClient();
 
 export const GET = async (request: NextRequest) => {
+  //リクエストヘッダーからtokenを取得することができる
+  const token = request.headers.get("Authorization") ?? "";
+
+  // supabaseに対してtokenを送る,ユーザー情報をオブジェクトで返却してもらうことができる
+  const { error } = await supabase.auth.getUser(token);
+
+  // 送ったtokenが正しくない場合、errorが返却されるので、クライアントにもエラーを返す
+  if (error)
+    return NextResponse.json({ status: error.message }, { status: 400 });
+
+  // tokenが正しい場合、以降が実行される
   try {
     // prisma.post.findMany は、データベースから複数の投稿を取得するメソッド
 
@@ -44,7 +56,7 @@ interface CreatePostRequestBody {
 }
 
 // POSTという命名にすることで、POSTリクエストの時にこの関数が呼ばれる
-export const POST = async (request: Request, context: any) => {
+export const POST = async (request: Request) => {
   try {
     // リクエストのbodyを取得
     const body = await request.json();
