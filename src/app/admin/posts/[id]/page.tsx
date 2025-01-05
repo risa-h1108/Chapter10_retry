@@ -10,7 +10,7 @@ import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 export default function Page() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [thumbnailUrl, setThumbnailUrl] = useState("");
+  const [thumbnailImageKey, setThumbnailImageKey] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
   const { id } = useParams();
   const router = useRouter();
@@ -29,7 +29,7 @@ export default function Page() {
           "Content-Type": "application/json",
           Authorization: token, // 👈 Header に token を付与
         },
-        body: JSON.stringify({ title, content, thumbnailUrl, categories }),
+        body: JSON.stringify({ title, content, thumbnailImageKey, categories }),
       });
       alert("記事を更新しました。");
     } catch (error) {
@@ -76,7 +76,7 @@ export default function Page() {
 
           setTitle(post.title);
           setContent(post.content);
-          setThumbnailUrl(post.thumbnailUrl);
+          setThumbnailImageKey(post.thumbnailImageKey);
 
           // post.postCategories（サーバーからのレスポンス）からCategory[]（フロントエンドの期待の型）への変換
           const categories = post.postCategories.map((pc) => pc.category);
@@ -105,8 +105,8 @@ export default function Page() {
         setTitle={setTitle}
         content={content}
         setContent={setContent}
-        thumbnailUrl={thumbnailUrl}
-        setThumbnailUrl={setThumbnailUrl}
+        thumbnailImageKey={thumbnailImageKey}
+        setThumbnailImageKey={setThumbnailImageKey}
         categories={categories}
         setCategories={setCategories}
         onSubmit={handleSubmit}

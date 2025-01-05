@@ -19,7 +19,7 @@ export default function AdminLayout({
   return (
     <>
       {/* サイドバー */}
-      <aside className="fixed bg-gray-100 w-[280px] left-0 bottom-0 top-[72px]">
+      <aside className="fixed bg-gray-100 w-[280px] left-0 bottom-0 top-[92px]">
         <Link
           href="/admin/posts"
           className={`p-4 block hover:bg-blue-100 ${
