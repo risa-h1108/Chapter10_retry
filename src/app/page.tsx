@@ -1,95 +1,57 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+"use client";
+import { useState, useEffect } from "react";
+import type { Post } from "@/app/_types/Post";
+import Link from "next/link";
 
-export default function Home() {
-  return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>src/app/page.tsx</code>.
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+export default function Page() {
+  // 投稿データを「状態」として管理 (初期値はnull)
+  const [posts, setPosts] = useState<Post[] | null>(null);
+  const [loading, setLoading] = useState(false);
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
+  useEffect(() => {
+    const fetcher = async () => {
+      const res = await fetch("/api/posts");
+      const { posts } = await res.json();
+      setPosts(posts);
+      setLoading(false);
+    };
+    fetcher();
+  }, []);
+
+  //loadingがtrueだったら,28行目が処理される。
+  if (loading) return <div className="text-gray-500">読み込み中…</div>;
+
+  //loadingがfalseかつpostsが空なら,31行目が処理される。
+  if (!posts) return <div className="text-gray-500">投稿がありません、、</div>;
+
+  //loadingがfalseかつpostsがあるなら, 34行目が処理される。
+  return posts.map((post) => (
+    <div key={post.id} className="mb-5 rounded-lg bg-white p-5 shadow-md">
+      <Link href={`/posts/${post.id}`} className="text-black no-underline">
+        {/* `/posts/${post.id}`の``は、JSの書き方。`post.id`の値が`/posts/の後に続くURLを動的に作成しています。例えば、post.id`が`123`なら、リンク先は`/posts/123`になる*/}
+
+        <div className="mb-[10px] flex items-center justify-between">
+          <p className="mr-1 text-sm text-[#888888]">
+            {new Date(post.createdAt).toLocaleDateString()}
+          </p>
+          <ul className="m-0 mb-2.5 flex list-none gap-2.5 p-0">
+            {post.postCategories.map((category, index) => (
+              <li
+                className="rounded border border-blue-500 px-2.5 py-[1.25] text-sm text-blue-600"
+                key={index}
+              >
+                {category.id}
+              </li>
+            ))}
+          </ul>
         </div>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        <h2 className="mb-10 text-xl font-bold leading-7">{post.title}</h2>
+        <p
+          className="line-clamp-3 leading-[1.6]"
+          dangerouslySetInnerHTML={{ __html: post.content }}
+        />
+      </Link>
     </div>
-  );
+  ));
 }
