@@ -1,10 +1,4 @@
-import * as React from "react";
-import Box from "@mui/material/Box";
-import OutlinedInput from "@mui/material/OutlinedInput";
-import MenuItem from "@mui/material/MenuItem";
-import FormControl from "@mui/material/FormControl";
-import Select from "@mui/material/Select";
-import Chip from "@mui/material/Chip";
+import React from "react";
 import { Category } from "@/app/_types/Category";
 import { useEffect } from "react";
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
@@ -21,60 +15,76 @@ export const CategoriesSelect: React.FC<Props> = ({
   const [categories, setCategories] = React.useState<Category[]>([]);
   const { token } = useSupabaseSession();
 
-  //handleChange:カテゴリーの選択が変更されたときに呼び出される関数
-  const handleChange = (value: number[]) => {
-    /*value配列の各要素（カテゴリーID）に対して処理を行います。
-    `forEach`は配列の各要素に対して指定した関数を実行 */
-    value.forEach((v: number) => {
-      /*someメソッド:`selectedCategories`配列の中に、現在のカテゴリーID（`v`）と一致するIDが存在するかを確認 */
-      const isSelect = selectedCategories.some((c) => c.id === v);
-      if (isSelect) {
-        setSelectedCategories(selectedCategories.filter((c) => c.id !== v));
-        return;
+  useEffect(() => {
+    const fetcher = async () => {
+      if (!token) return;
+
+      try {
+        const res = await fetch("/api/admin/categories", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token,
+          },
+        });
+
+        const { categories } = await res.json();
+        console.log(categories);
+
+        setCategories(categories);
+      } catch (error) {
+        console.error(error);
+        alert("カテゴリーの取得に失敗しました。再度試してください");
       }
-      const category = categories.find((c) => c.id === v);
-      //`categories`配列に一致するIDが見つからなかった場合）、関数は`return`を実行して、現在の反復を終了
-      if (!category) return;
-      setSelectedCategories([...selectedCategories, category]);
-    });
+    };
+
+    fetcher();
+  }, [token]);
+
+  //handleChange:カテゴリーの選択が変更されたときに呼び出される関数
+  const handleChange = (category: Category) => {
+    const isSelect = selectedCategories.some((c) => c.id === category.id);
+
+    //カテゴリが既に選択されている場合の処理
+    if (isSelect) {
+      setSelectedCategories(
+        selectedCategories.filter((c) => c.id !== category.id)
+      );
+      //カテゴリが未選択の場合の処理
+    } else {
+      setSelectedCategories([...selectedCategories, category]); //[...] を使って、既存の選択済みカテゴリに新しいカテゴリを追加
+    }
   };
 
-  useEffect(() => {
-    if (!token) return;
-    const fetcher = async () => {
-      const res = await fetch("/api/admin/categories", {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token, // 👈 Header に token を付与
-        },
-      });
-      const { categories } = await res.json();
-      setCategories(categories);
-    };
-    fetcher();
-  }, []);
-
   return (
-    <FormControl className="w-full">
-      <Select
-        multiple
-        value={selectedCategories}
-        onChange={(e) => handleChange(e.target.value as unknown as number[])}
-        input={<OutlinedInput />}
-        renderValue={(selected: Category[]) => (
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-            {selected.map((value: Category) => (
-              <Chip key={value.id} label={value.name} />
-            ))}
-          </Box>
-        )}
-      >
-        {categories.map((category) => (
-          <MenuItem key={category.id} value={category.id}>
-            {category.name}
-          </MenuItem>
-        ))}
-      </Select>
-    </FormControl>
+    <div className="w-full">
+      <div className="flex flex-wrap gap-2">
+        {/*各カテゴリに対するボタンを生成 */}
+        {categories.map((category) => {
+          {
+            /*選択したカテゴリーが既に選択されたカテゴリーに含まれているか確認、
+          some:配列内に条件を満たす要素が少なくとも一つ存在するかを判定 */
+          }
+          const isSelected = selectedCategories.some(
+            (c) => c.id === category.id
+          );
+
+          return (
+            <button
+              key={category.id}
+              type="button"
+              className={`rounded-full px-4 py-2 text-sm font-bold outline outline-1 ${
+                isSelected
+                  ? " bg-white text-blue-500"
+                  : "bg-white text-gray-700 outline-gray-300"
+              }`}
+              onClick={() => handleChange(category)}
+            >
+              {category.name}
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 };
